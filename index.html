@@ -1,7 +1,348 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-   
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🔧 SISTEMA DE VERIFICACIÓN HUMANA 🔧</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', 'Fira Code', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .card {
+            background: rgba(10, 20, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 48px;
+            border: 1px solid #2affb6;
+            box-shadow: 0 0 30px rgba(42, 255, 182, 0.2);
+            padding: 2rem 1.5rem;
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: #2affb6;
+            text-shadow: 0 0 5px #00aa66;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+        }
+
+        .status-panel {
+            background: #000000aa;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #bbffdd;
+            border-left: 4px solid #2affb6;
+            text-align: left;
+        }
+
+        .robot-area {
+            background: #111922;
+            border-radius: 32px;
+            padding: 30px 20px;
+            margin: 20px 0;
+            border: 2px dashed #3a4a6e;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+
+        .robot-area:active {
+            background: #1a2a3a;
+        }
+
+        .robot-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffcc88;
+            display: inline-block;
+            background: #00000099;
+            padding: 10px 20px;
+            border-radius: 60px;
+            pointer-events: none;
+        }
+
+        .fake-checkbox {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background: #2a2e3a;
+            border-radius: 8px;
+            border: 2px solid #5a6e8a;
+            vertical-align: middle;
+            margin-right: 12px;
+            transition: 0.1s linear;
+        }
+
+        .fake-checkbox.checked {
+            background: #2affb6;
+            border-color: #b8ffd8;
+            box-shadow: 0 0 8px #2affb6;
+        }
+
+        .btn-move {
+            background: #ff6644;
+            border: none;
+            color: white;
+            font-family: monospace;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: 0.05s linear;
+            box-shadow: 0 4px 0 #882200;
+        }
+
+        .btn-move:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #882200;
+        }
+
+        .hidden-links {
+            margin-top: 25px;
+            padding: 15px;
+            background: #07121f;
+            border-radius: 28px;
+            display: none;
+            border: 1px solid #2affb6;
+        }
+
+        .links-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .day-link {
+            background: #1f2a3e;
+            padding: 8px 16px;
+            border-radius: 40px;
+            text-decoration: none;
+            color: #ccffdd;
+            font-weight: bold;
+            transition: 0.2s;
+            border: 1px solid #3a6e8a;
+        }
+
+        .day-link:hover {
+            background: #2affb6;
+            color: #0a0f1e;
+            border-color: white;
+        }
+
+        .finish-message {
+            color: #ffcc88;
+            font-size: 1.2rem;
+            margin: 15px 0 0;
+        }
+
+        .cursor-emoji {
+            font-size: 2rem;
+            display: inline-block;
+            animation: bounce 0.8s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 10px;
+            color: #5588aa;
+        }
+    </style>
+</head>
+<body>
+<div class="card" id="app">
+    <h1>🔒 VERIFICACIÓN ANTIRROBOT</h1>
+    <div class="status-panel" id="statusMsg">
+        ⚠️ Para acceder al contenido, demuestra que NO eres un robot.<br>
+        ✅ Haz clic en el recuadro: <strong style="color:#ffaa66;">"NO SOY UN ROBOT"</strong>
+    </div>
+
+    <div class="robot-area" id="clickZone">
+        <div class="robot-text" id="movingText">
+            <span class="fake-checkbox" id="fakeCheck"></span>
+            🤖 NO SOY UN ROBOT 🤖
+        </div>
+    </div>
+    <button class="btn-move" id="resetBtn">🔄 REINTENTAR (se mueve otra vez)</button>
+    <div id="jokeMessage" style="margin-top: 12px; font-size: 12px; color: #aaa;"></div>
+    <div id="secretLinks" class="hidden-links">
+        <div class="finish-message">🎉 ¡JAJA! TODO ERA UN DESPISTE 🎉<br>⬇️ Aquí sí están los regalos reales ⬇️</div>
+        <div class="links-grid" id="linksContainer"></div>
+        <footer>pd: los ingenieros también caen en estos trucos 😉</footer>
+    </div>
+</div>
+
+<script>
+    // --- JUEGO GRACIOSO: botón que se mueve y "checkbox" tramposo ---
+    const clickZone = document.getElementById('clickZone');
+    const movingText = document.getElementById('movingText');
+    const fakeCheckSpan = document.getElementById('fakeCheck');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusDiv = document.getElementById('statusMsg');
+    const jokeMsgDiv = document.getElementById('jokeMessage');
+    const secretLinksDiv = document.getElementById('secretLinks');
+    const linksContainer = document.getElementById('linksContainer');
+
+    let checkActivated = false;      // si ya "marcó" el checkbox
+    let moveInterval = null;
+    let moveCount = 0;               // contador de veces que el botón se movió
+
+    // Lista de los días (URLs relativas)
+    const days = [
+        { name: "📅 DÍA 1 · Lotería Táctil", url: "dia1/" },
+        { name: "🔮 DÍA 2 · Cubo de Cristal", url: "dia2/" },
+        { name: "🕶️ DÍA 3 · Visión Cyberpunk", url: "dia3/" },
+        { name: "🌀 DÍA 4 · Portal 360°", url: "dia4/" },
+        { name: "❤️ DÍA 5 · Corazón 3D AR", url: "dia5/" }
+    ];
+
+    // Función para mover el texto aleatoriamente dentro del área (efecto gracioso)
+    function moveButtonRandomly() {
+        if (!clickZone || !movingText || checkActivated) return;
+        const zoneRect = clickZone.getBoundingClientRect();
+        const textRect = movingText.getBoundingClientRect();
+        // Calculamos límites para que no se salga del área clickZone (margen 10px)
+        const maxLeft = zoneRect.width - textRect.width - 10;
+        const maxTop = zoneRect.height - textRect.height - 10;
+        let newLeft = Math.random() * Math.max(10, maxLeft);
+        let newTop = Math.random() * Math.max(10, maxTop);
+        newLeft = Math.min(maxLeft, Math.max(5, newLeft));
+        newTop = Math.min(maxTop, Math.max(5, newTop));
+        movingText.style.position = 'relative';
+        movingText.style.left = newLeft + 'px';
+        movingText.style.top = newTop + 'px';
+        moveCount++;
+        if (moveCount % 3 === 0) {
+            jokeMsgDiv.innerHTML = "🐢 ¿Por qué corres, botón? ¡Solo quiero clickearte!";
+            setTimeout(() => { if (jokeMsgDiv.innerHTML.includes("corres")) jokeMsgDiv.innerHTML = ""; }, 1200);
+        }
+    }
+
+    function startMoving() {
+        if (moveInterval) clearInterval(moveInterval);
+        moveInterval = setInterval(() => {
+            if (!checkActivated) moveButtonRandomly();
+        }, 800);
+    }
+
+    function stopMoving() {
+        if (moveInterval) {
+            clearInterval(moveInterval);
+            moveInterval = null;
+        }
+    }
+
+    // Reiniciar trampa (reset)
+    function resetGame() {
+        checkActivated = false;
+        fakeCheckSpan.classList.remove('checked');
+        movingText.style.position = 'relative';
+        movingText.style.left = '0px';
+        movingText.style.top = '0px';
+        stopMoving();
+        startMoving();
+        statusDiv.innerHTML = "⚠️ Para acceder al contenido, demuestra que NO eres un robot.<br>✅ Haz clic en el recuadro: <strong style='color:#ffaa66;'>'NO SOY UN ROBOT'</strong>";
+        jokeMsgDiv.innerHTML = "";
+        secretLinksDiv.style.display = "none";
+        moveCount = 0;
+    }
+
+    // Evento para "marcar" el checkbox (aunque se mueva, el área completa es clickeable)
+    function onFakeCheckClick(e) {
+        if (checkActivated) {
+            // ya ganó, no hacemos nada más
+            return;
+        }
+        // Marcamos como activado, paramos movimiento y mostramos el despiste final
+        checkActivated = true;
+        stopMoving();
+        fakeCheckSpan.classList.add('checked');
+        statusDiv.innerHTML = "✅ ¡VERIFICACIÓN EXITOSA! ... o eso crees. 🤖<br>Ahora, lee el mensaje sorpresa...";
+        jokeMsgDiv.innerHTML = "🧠 JAJA, en realidad este 'captcha' era una broma para despistarte. ¡Los verdaderos regalos están aquí abajo!";
+        
+        // Efecto de vibración juguetona
+        if (navigator.vibrate) navigator.vibrate(200);
+        
+        // Mostrar los enlaces verdaderos después de 0.8 segundos con estilo
+        setTimeout(() => {
+            // Generar los enlaces de los días
+            linksContainer.innerHTML = "";
+            days.forEach(day => {
+                const link = document.createElement('a');
+                link.href = day.url;
+                link.className = 'day-link';
+                link.target = "_self";
+                link.textContent = day.name;
+                linksContainer.appendChild(link);
+            });
+            secretLinksDiv.style.display = "block";
+            // Mensaje adicional gracioso
+            const extraMsg = document.createElement('div');
+            extraMsg.style.marginTop = "12px";
+            extraMsg.style.fontSize = "11px";
+            extraMsg.style.color = "#88ddff";
+            extraMsg.innerHTML = "✨ (El juego del botón movedizo era una cortina de humo. ¡Disfruta tu calendario tecnológico!) ✨";
+            linksContainer.appendChild(extraMsg);
+        }, 600);
+    }
+
+    // El área completa del clickZone permite marcar (para que aunque se mueva el texto, la zona sea grande)
+    clickZone.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!checkActivated) {
+            onFakeCheckClick(e);
+        } else {
+            // si ya está activado, que haga un pequeño guiño
+            jokeMsgDiv.innerHTML = "🤖 Tranquila, ya tienes los enlaces ahí abajo. ¡No hace falta seguir clickeando!";
+            setTimeout(() => {
+                if (jokeMsgDiv.innerHTML.includes("Tranquila")) jokeMsgDiv.innerHTML = "";
+            }, 1500);
+        }
+    });
+
+    // Botón reset para reiniciar la broma (si quiere volver a ver el comportamiento)
+    resetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        resetGame();
+        if (navigator.vibrate) navigator.vibrate(50);
+    });
+
+    // Inicializar el juego
+    resetGame();
+
+    // Opcional: si el usuario intenta hacer trampa con inspección, un mensaje oculto
+    console.log("%c🚨 ¡ATENCIÓN INGENIERA! 🚨\nEsto es solo un despiste gracioso. Los días reales están en /dia1 a /dia5", "color: #ffaa33; font-size: 14px");
+
+    // Ajuste para móvil: evitar que el movimiento cause scroll extra
+    clickZone.addEventListener('touchstart', (e) => {
+        // no prevenir del todo, solo para que el evento funcione
+    });
+</script>
 </body>
 </html>
