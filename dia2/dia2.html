@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Día 2 · Puzzle de arrastrar piezas</title>
+    <title>Día 2 · Puzzle Deslizante (4x4)</title>
     <style>
         * {
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
         }
 
         body {
@@ -26,7 +27,7 @@
             backdrop-filter: blur(4px);
             border-radius: 48px;
             padding: 20px;
-            max-width: 700px;
+            max-width: 550px;
             width: 100%;
             text-align: center;
             border: 1px solid #2affb6;
@@ -35,146 +36,117 @@
 
         h2 {
             color: #88ffcc;
-            margin: 0 0 10px 0;
+            margin: 0 0 5px;
             font-size: 1.5rem;
         }
 
         .sub {
             color: #ccffdd;
             font-size: 0.8rem;
-            margin-bottom: 20px;
-        }
-
-        .game-area {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        /* Área de piezas sueltas */
-        .pieces-area {
-            flex: 1;
-            min-width: 180px;
-            background: #0f1422;
-            border-radius: 32px;
-            padding: 15px;
-            border: 2px dashed #3a6e8a;
-        }
-
-        .pieces-title {
-            color: #ffaa88;
-            font-size: 0.9rem;
             margin-bottom: 15px;
         }
 
-        .pieces-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 12px;
-            justify-items: center;
+        /* Miniatura de la imagen (activable/desactivable) */
+        .preview-area {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .preview-btn {
+            background: #335577;
+            border: none;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-family: monospace;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 0 5px;
+        }
+        .thumbnail {
+            display: none;
+            margin: 10px auto;
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            border: 2px solid #2affb6;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+        }
+        .thumbnail.visible {
+            display: block;
         }
 
-        /* Pieza individual */
-        .piece {
-            width: 100px;
-            height: 100px;
-            background-size: 300% 300%;
-            background-repeat: no-repeat;
-            border-radius: 20px;
-            cursor: grab;
+        /* Tablero del puzzle */
+        .puzzle-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            background: #1a1f2a;
+            padding: 10px;
+            border-radius: 28px;
+            width: min(80vw, 80vh);
+            height: min(80vw, 80vh);
+            margin: 0 auto;
+        }
+
+        .tile {
+            background-size: 400% 400%;
+            background-color: #2a3a4a;
+            border-radius: 16px;
+            cursor: pointer;
             transition: 0.05s linear;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-            touch-action: none;
-        }
-
-        .piece:active {
-            cursor: grabbing;
-            transform: scale(0.97);
-        }
-
-        /* Tablero con siluetas */
-        .board-area {
-            flex: 1;
-            min-width: 250px;
-            background: #0f1422;
-            border-radius: 32px;
-            padding: 15px;
-        }
-
-        .board-title {
-            color: #ffaa88;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        .slots-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            justify-items: center;
-            align-items: center;
-        }
-
-        .slot {
-            width: 100px;
-            height: 100px;
-            background: #1a2a3a;
-            border-radius: 20px;
-            border: 3px dashed #5a8eaa;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            transition: 0.1s;
+            font-size: 2rem;
+            color: #88aaff;
         }
 
-        .slot.filled {
-            border: 3px solid #2affb6;
-            background: #1e3a3a;
+        .tile:active {
+            transform: scale(0.96);
         }
 
-        .slot-bg {
-            width: 100%;
-            height: 100%;
-            background-size: 300% 300%;
-            background-repeat: no-repeat;
-            opacity: 0.35;
-            border-radius: 18px;
-        }
-
-        .slot.highlight {
-            border-color: #ffaa44;
-            background: #2a3a2a;
-            transform: scale(1.02);
+        .empty {
+            background: #1a2a3a !important;
+            background-image: none !important;
         }
 
         .message {
-            margin: 20px 0;
-            font-size: 1.2rem;
+            margin: 15px 0;
+            font-size: 1.1rem;
             color: #ffdd88;
-            min-height: 70px;
+            min-height: 60px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
         }
 
         button {
             background: #ff6644;
             border: none;
             color: white;
-            padding: 8px 24px;
+            padding: 8px 18px;
             border-radius: 40px;
             font-family: monospace;
             font-weight: bold;
             cursor: pointer;
-            margin: 5px;
-            font-size: 1rem;
+            font-size: 0.9rem;
+            transition: 0.1s;
         }
 
         button:active {
             transform: scale(0.96);
         }
 
-        .reset-btn {
-            background: #3366aa;
+        .solve-btn {
+            background: #33aa88;
         }
 
         footer {
@@ -183,308 +155,213 @@
             margin-top: 15px;
         }
 
-        @media (max-width: 600px) {
-            .piece, .slot {
-                width: 75px;
-                height: 75px;
-            }
-            .pieces-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .slots-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        /* Modal para imagen grande */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 30px;
+            border: 3px solid #2affb6;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>🧩 DÍA 2 · PUZZLE DE ENCAJE</h2>
-    <div class="sub">Arrastra cada pieza a su silueta correspondiente</div>
+    <h2>🧩 DÍA 2 · PUZZLE DESLIZANTE</h2>
+    <div class="sub">(4x4) Mueve las fichas hasta recomponer la imagen</div>
 
-    <div class="game-area">
-        <div class="pieces-area">
-            <div class="pieces-title">📦 PIEZAS PARA COLOCAR</div>
-            <div class="pieces-container" id="piecesContainer"></div>
-        </div>
-        <div class="board-area">
-            <div class="board-title">🎯 COLÓCALAS AQUÍ</div>
-            <div class="slots-container" id="slotsContainer"></div>
-        </div>
+    <div class="preview-area">
+        <button id="togglePreviewBtn" class="preview-btn">🖼️ Mostrar miniatura</button>
+        <button id="showFullImageBtn" class="preview-btn">🔍 Ver imagen completa</button>
     </div>
+    <div id="thumbnail" class="thumbnail"></div>
 
+    <div class="puzzle-board" id="puzzleBoard"></div>
     <div class="message" id="message"></div>
-    <button id="resetBtn" class="reset-btn">🔄 REINICIAR PUZZLE</button>
-    <footer>💡 Toca o arrastra la pieza hasta la silueta. ¡Encajarán solas!</footer>
+
+    <div class="buttons">
+        <button id="shuffleBtn">🔀 MEZCLAR</button>
+        <button id="solveBtn" class="solve-btn">🔓 RESOLVER</button>
+    </div>
+    <footer>💡 Haz clic en una ficha junto al hueco (✨) para moverla.</footer>
+</div>
+
+<!-- Modal para imagen completa -->
+<div id="imageModal" class="modal">
+    <span class="modal-close" id="closeModal">&times;</span>
+    <img id="fullImage" src="" alt="Imagen completa">
 </div>
 
 <script>
     // ================= CONFIGURACIÓN =================
-    // USA TU IMAGEN LOCAL: imagen2D.png (debe estar en la misma carpeta)
-    const IMG_URL = 'imagen2D.png';
-    
-    // Dividimos la imagen en 2 filas x 3 columnas = 6 piezas
-    const ROWS = 2;
-    const COLS = 3;
-    const PIECES_COUNT = ROWS * COLS;
-    
-    // Generar datos de cada pieza (posición original en la imagen)
-    let piecesData = [];
-    for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-            piecesData.push({
-                id: row * COLS + col,
-                row: row,
-                col: col,
-                posX: (col / (COLS - 1)) * 100,
-                posY: (row / (ROWS - 1)) * 100,
-                placed: false
-            });
-        }
-    }
-    
-    let piecesPlaced = Array(PIECES_COUNT).fill(false);
-    let slots = Array(PIECES_COUNT).fill(null);
-    
-    // Elementos DOM
-    const piecesContainer = document.getElementById('piecesContainer');
-    const slotsContainer = document.getElementById('slotsContainer');
+    const SIZE = 4;          // 4x4 = 16 fichas (la última es el hueco)
+    const EMPTY_VALUE = SIZE * SIZE - 1;  // índice 15 (0-index)
+    let tiles = [];          // orden actual: cada número representa la ficha (0..15)
+    let emptyIndex = EMPTY_VALUE;
+    const board = document.getElementById('puzzleBoard');
     const messageDiv = document.getElementById('message');
     
-    // Variables para drag & drop manual (soporte táctil y ratón)
-    let draggedPieceId = null;
-    let touchActive = false;
-    let touchClone = null;
-    let touchStartX = 0, touchStartY = 0;
-    let touchPieceId = null;
-    let currentHighlightSlot = null;
+    // Usa TU IMAGEN LOCAL (debe estar en misma carpeta)
+    const IMG_URL = 'imagen2D.png';
     
-    // Construir slots (siluetas)
-    function buildSlots() {
-        slotsContainer.innerHTML = '';
-        for (let i = 0; i < PIECES_COUNT; i++) {
-            const slot = document.createElement('div');
-            slot.className = 'slot';
-            slot.dataset.slotIndex = i;
-            const bgDiv = document.createElement('div');
-            bgDiv.className = 'slot-bg';
-            const piece = piecesData[i];
-            bgDiv.style.backgroundImage = `url(${IMG_URL})`;
-            bgDiv.style.backgroundSize = `${COLS * 100}% ${ROWS * 100}%`;
-            bgDiv.style.backgroundPosition = `${piece.posX}% ${piece.posY}%`;
-            slot.appendChild(bgDiv);
-            // Eventos para soltar con ratón (drag & drop nativo)
-            slot.addEventListener('dragover', (e) => e.preventDefault());
-            slot.addEventListener('drop', (e) => {
-                e.preventDefault();
-                handleDrop(i);
-            });
-            slotsContainer.appendChild(slot);
-        }
-    }
+    // Precargar la miniatura y modal
+    const thumbnailDiv = document.getElementById('thumbnail');
+    thumbnailDiv.style.backgroundImage = `url(${IMG_URL})`;
+    thumbnailDiv.style.backgroundSize = 'cover';
+    const fullImage = document.getElementById('fullImage');
+    fullImage.src = IMG_URL;
     
-    // Construir piezas no colocadas
-    function rebuildPieces() {
-        piecesContainer.innerHTML = '';
-        piecesData.forEach((piece) => {
-            if (piecesPlaced[piece.id]) return;
-            const pieceDiv = document.createElement('div');
-            pieceDiv.className = 'piece';
-            pieceDiv.dataset.pieceId = piece.id;
-            pieceDiv.style.backgroundImage = `url(${IMG_URL})`;
-            pieceDiv.style.backgroundSize = `${COLS * 100}% ${ROWS * 100}%`;
-            pieceDiv.style.backgroundPosition = `${piece.posX}% ${piece.posY}%`;
-            // Drag nativo para ratón
-            pieceDiv.setAttribute('draggable', 'true');
-            pieceDiv.addEventListener('dragstart', (e) => {
-                draggedPieceId = piece.id;
-                e.dataTransfer.setData('text/plain', piece.id);
-                e.dataTransfer.effectAllowed = 'move';
-                pieceDiv.classList.add('dragging');
-            });
-            pieceDiv.addEventListener('dragend', (e) => {
-                pieceDiv.classList.remove('dragging');
-                draggedPieceId = null;
-            });
-            // Eventos táctiles (movimiento manual)
-            pieceDiv.addEventListener('touchstart', handleTouchStart);
-            pieceDiv.addEventListener('touchmove', handleTouchMove);
-            pieceDiv.addEventListener('touchend', handleTouchEnd);
-            piecesContainer.appendChild(pieceDiv);
-        });
-    }
-    
-    // Soltar en slot (drag nativo)
-    function handleDrop(slotIndex) {
-        if (draggedPieceId === null) return;
-        const pieceId = draggedPieceId;
-        if (pieceId === slotIndex && !piecesPlaced[pieceId]) {
-            placePiece(pieceId, slotIndex);
+    // Toggle miniatura
+    let thumbnailVisible = false;
+    const togglePreviewBtn = document.getElementById('togglePreviewBtn');
+    togglePreviewBtn.addEventListener('click', () => {
+        thumbnailVisible = !thumbnailVisible;
+        if (thumbnailVisible) {
+            thumbnailDiv.classList.add('visible');
+            togglePreviewBtn.innerText = '🖼️ Ocultar miniatura';
         } else {
-            messageDiv.innerHTML = '❌ Esta pieza no va aquí. Sigue intentando.';
-            setTimeout(() => {
-                if (messageDiv.innerHTML === '❌ Esta pieza no va aquí. Sigue intentando.') messageDiv.innerHTML = '';
-            }, 1200);
+            thumbnailDiv.classList.remove('visible');
+            togglePreviewBtn.innerText = '🖼️ Mostrar miniatura';
         }
-        draggedPieceId = null;
+    });
+    
+    // Modal imagen completa
+    const modal = document.getElementById('imageModal');
+    const showFullImageBtn = document.getElementById('showFullImageBtn');
+    const closeModal = document.getElementById('closeModal');
+    showFullImageBtn.onclick = () => { modal.style.display = 'flex'; };
+    closeModal.onclick = () => { modal.style.display = 'none'; };
+    modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+    
+    // ========== LÓGICA DEL PUZZLE ==========
+    function initSolvedState() {
+        tiles = [];
+        for (let i = 0; i < SIZE * SIZE; i++) {
+            tiles.push(i);
+        }
+        emptyIndex = EMPTY_VALUE;
     }
     
-    // Colocar pieza correctamente
-    function placePiece(pieceId, slotIndex) {
-        piecesPlaced[pieceId] = true;
-        slots[slotIndex] = pieceId;
-        const slotDiv = slotsContainer.children[slotIndex];
-        slotDiv.classList.add('filled');
-        const bg = slotDiv.querySelector('.slot-bg');
-        bg.style.opacity = '0.9';
-        bg.style.filter = 'drop-shadow(0 0 4px cyan)';
-        rebuildPieces();
-        if (navigator.vibrate) navigator.vibrate(80);
-        checkCompletion();
+    // Obtener índices de vecinos (arriba, abajo, izquierda, derecha)
+    function getNeighbors(idx) {
+        const row = Math.floor(idx / SIZE);
+        const col = idx % SIZE;
+        const neighbors = [];
+        if (row > 0) neighbors.push(idx - SIZE);
+        if (row < SIZE - 1) neighbors.push(idx + SIZE);
+        if (col > 0) neighbors.push(idx - 1);
+        if (col < SIZE - 1) neighbors.push(idx + 1);
+        return neighbors;
     }
     
-    function checkCompletion() {
-        const allPlaced = piecesPlaced.every(v => v === true);
-        if (allPlaced) {
-            messageDiv.innerHTML = '🎉 ¡PUZZLE COMPLETADO! 🎉<br>🍫 Te has ganado un chocolate. ¡Puzzle perfecto! 🍫';
-            if (navigator.vibrate) navigator.vibrate([200,100,200]);
-        } else {
-            const placedCount = piecesPlaced.filter(v => v).length;
-            messageDiv.innerHTML = `✨ Llevas ${placedCount} de ${PIECES_COUNT} piezas colocadas. ✨`;
-        }
+    // Intercambiar dos posiciones
+    function swap(i, j) {
+        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
     }
     
-    // ========== MANEJO TÁCTIL (para móviles) ==========
-    function handleTouchStart(e) {
-        e.preventDefault();
-        const pieceDiv = e.target.closest('.piece');
-        if (!pieceDiv) return;
-        const pieceId = parseInt(pieceDiv.dataset.pieceId);
-        if (piecesPlaced[pieceId]) return;
-        touchPieceId = pieceId;
-        const rect = pieceDiv.getBoundingClientRect();
-        touchStartX = e.touches[0].clientX - rect.left;
-        touchStartY = e.touches[0].clientY - rect.top;
-        touchClone = pieceDiv.cloneNode(true);
-        touchClone.style.position = 'fixed';
-        touchClone.style.left = `${rect.left}px`;
-        touchClone.style.top = `${rect.top}px`;
-        touchClone.style.width = `${rect.width}px`;
-        touchClone.style.height = `${rect.height}px`;
-        touchClone.style.zIndex = '1000';
-        touchClone.style.opacity = '0.8';
-        touchClone.style.pointerEvents = 'none';
-        document.body.appendChild(touchClone);
-        pieceDiv.style.opacity = '0.4';
-        touchActive = true;
-    }
-    
-    function handleTouchMove(e) {
-        if (!touchClone || !touchActive) return;
-        e.preventDefault();
-        const clientX = e.touches[0].clientX;
-        const clientY = e.touches[0].clientY;
-        touchClone.style.left = `${clientX - touchStartX}px`;
-        touchClone.style.top = `${clientY - touchStartY}px`;
-        
-        // Detectar slot bajo el dedo
-        const elemUnder = document.elementsFromPoint(clientX, clientY);
-        let targetSlot = null;
-        for (let el of elemUnder) {
-            if (el.classList && el.classList.contains('slot')) {
-                targetSlot = el;
-                break;
-            }
-        }
-        if (currentHighlightSlot) {
-            currentHighlightSlot.classList.remove('highlight');
-            currentHighlightSlot = null;
-        }
-        if (targetSlot && !targetSlot.classList.contains('filled')) {
-            const slotIdx = parseInt(targetSlot.dataset.slotIndex);
-            if (slotIdx === touchPieceId) {
-                targetSlot.classList.add('highlight');
-                currentHighlightSlot = targetSlot;
-            }
-        }
-    }
-    
-    function handleTouchEnd(e) {
-        if (!touchClone || !touchActive) {
-            resetTouchDrag();
-            return;
-        }
-        e.preventDefault();
-        const clientX = e.changedTouches[0].clientX;
-        const clientY = e.changedTouches[0].clientY;
-        const elemUnder = document.elementsFromPoint(clientX, clientY);
-        let targetSlot = null;
-        for (let el of elemUnder) {
-            if (el.classList && el.classList.contains('slot')) {
-                targetSlot = el;
-                break;
-            }
-        }
-        if (targetSlot && !targetSlot.classList.contains('filled')) {
-            const slotIdx = parseInt(targetSlot.dataset.slotIndex);
-            if (touchPieceId === slotIdx && !piecesPlaced[touchPieceId]) {
-                placePiece(touchPieceId, slotIdx);
+    // Mover ficha si es adyacente al hueco
+    function tryMove(tileIndex) {
+        if (getNeighbors(emptyIndex).includes(tileIndex)) {
+            swap(tileIndex, emptyIndex);
+            emptyIndex = tileIndex;
+            renderBoard();
+            if (isSolved()) {
+                messageDiv.innerHTML = '🎉 ¡PUZZLE COMPLETADO! 🎉<br>🍫 ¡Ganaste un chocolate! 🍫';
+                if (navigator.vibrate) navigator.vibrate(200);
             } else {
-                messageDiv.innerHTML = '❌ No es su lugar. Sigue intentando.';
-                setTimeout(() => {
-                    if (messageDiv.innerHTML === '❌ No es su lugar. Sigue intentando.') messageDiv.innerHTML = '';
-                }, 1000);
+                messageDiv.innerHTML = '👍 Sigue moviendo...';
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    function isSolved() {
+        for (let i = 0; i < tiles.length; i++) {
+            if (tiles[i] !== i) return false;
+        }
+        return true;
+    }
+    
+    // Mezclar mediante movimientos aleatorios (siempre resoluble)
+    function shufflePuzzle() {
+        for (let i = 0; i < 500; i++) {
+            const neighbors = getNeighbors(emptyIndex);
+            if (neighbors.length) {
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                swap(emptyIndex, randomNeighbor);
+                emptyIndex = randomNeighbor;
             }
         }
-        resetTouchDrag();
+        renderBoard();
+        messageDiv.innerHTML = '🔀 Puzzle mezclado. ¡A ordenar!';
     }
     
-    function resetTouchDrag() {
-        if (touchClone) {
-            touchClone.remove();
-            touchClone = null;
+    // Resolver automáticamente (ordenar)
+    function solvePuzzle() {
+        initSolvedState();
+        renderBoard();
+        messageDiv.innerHTML = '✨ ¡RESUELTO! ✨<br>✅ Imagen completa restaurada.';
+        if (navigator.vibrate) navigator.vibrate(100);
+    }
+    
+    // Renderizar el tablero con la imagen fragmentada
+    function renderBoard() {
+        board.innerHTML = '';
+        for (let i = 0; i < tiles.length; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            const pieceValue = tiles[i];
+            if (pieceValue === EMPTY_VALUE) {
+                tile.classList.add('empty');
+                tile.innerHTML = '✨';
+                tile.style.backgroundImage = 'none';
+            } else {
+                // Calcular posición del fragmento en la imagen original
+                const row = Math.floor(pieceValue / SIZE);
+                const col = pieceValue % SIZE;
+                const posX = (col / (SIZE - 1)) * 100;
+                const posY = (row / (SIZE - 1)) * 100;
+                tile.style.backgroundImage = `url(${IMG_URL})`;
+                tile.style.backgroundSize = `${SIZE * 100}% ${SIZE * 100}%`;
+                tile.style.backgroundPosition = `${posX}% ${posY}%`;
+                tile.innerHTML = '';
+            }
+            tile.addEventListener('click', (function(idx) {
+                return function() { tryMove(idx); };
+            })(i));
+            board.appendChild(tile);
         }
-        if (currentHighlightSlot) {
-            currentHighlightSlot.classList.remove('highlight');
-            currentHighlightSlot = null;
-        }
-        const originalPiece = document.querySelector(`.piece[data-piece-id="${touchPieceId}"]`);
-        if (originalPiece) originalPiece.style.opacity = '1';
-        touchActive = false;
-        touchPieceId = null;
     }
     
-    // Reiniciar juego
-    function resetGame() {
-        piecesPlaced.fill(false);
-        slots.fill(null);
-        for (let i = 0; i < slotsContainer.children.length; i++) {
-            const slotDiv = slotsContainer.children[i];
-            slotDiv.classList.remove('filled');
-            const bg = slotDiv.querySelector('.slot-bg');
-            bg.style.opacity = '0.35';
-            bg.style.filter = '';
-        }
-        rebuildPieces();
-        messageDiv.innerHTML = '🔄 Puzzle reiniciado. ¡Arrastra las piezas a su silueta!';
-        setTimeout(() => {
-            if (messageDiv.innerHTML === '🔄 Puzzle reiniciado. ¡Arrastra las piezas a su silueta!') 
-                messageDiv.innerHTML = '';
-        }, 2000);
-        if (navigator.vibrate) navigator.vibrate(50);
-    }
+    // Inicialización
+    initSolvedState();
+    shufflePuzzle();   // arranca mezclado
     
-    // Inicializar
-    function init() {
-        buildSlots();
-        rebuildPieces();
-        document.body.addEventListener('dragover', (e) => e.preventDefault());
-        document.body.addEventListener('drop', (e) => e.preventDefault());
-        document.getElementById('resetBtn').addEventListener('click', resetGame);
-        messageDiv.innerHTML = '✨ Arrastra cada pieza hasta su sombra ✨';
-    }
-    
-    init();
+    // Botones
+    document.getElementById('shuffleBtn').addEventListener('click', () => {
+        shufflePuzzle();
+    });
+    document.getElementById('solveBtn').addEventListener('click', () => {
+        solvePuzzle();
+    });
 </script>
 </body>
 </html>
