@@ -2,88 +2,224 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Día 4 · Portal Inmersivo · Calendario Tecnológico</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Día 4 · Disparo al blanco</title>
     <style>
         body {
+            background: #0a0a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             margin: 0;
-            overflow: hidden;
-            font-family: 'Courier New', monospace;
-        }
-        .instruction {
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            background: rgba(0,0,0,0.6);
-            color: #0f0;
-            padding: 8px;
-            font-size: 14px;
-            z-index: 10;
-            pointer-events: none;
-            backdrop-filter: blur(5px);
+            padding: 20px;
             font-family: monospace;
         }
-        @media (max-width: 600px) {
-            .instruction { font-size: 10px; }
+        .game-container {
+            background: #11151f;
+            border-radius: 32px;
+            padding: 20px;
+            text-align: center;
+        }
+        canvas {
+            background: #1e2a2e;
+            border-radius: 24px;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #2affb6;
+            font-size: 1.2rem;
+        }
+        button {
+            margin-top: 15px;
+            background: #ff8844;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="instruction">🌀 GIRA EL TELÉFONO 360° · MIRA HACIA ARRIBA PARA LA CARTA 🌀</div>
-    
-    <a-scene vr-mode-ui="enabled: true" device-orientation-permission-ui="enabled: true" embedded>
-        <!-- Entorno 360° con una imagen equirectangular (puedes cambiarla por una foto real 360) -->
-        <a-sky src="https://cdn.aframe.io/360-image-gallery/img/3.jpg" rotation="0 -90 0"></a-sky>
-        
-        <!-- Suelo con rejilla tecnológica -->
-        <a-grid position="0 -1.5 0" width="20" depth="20" color="#2266aa" opacity="0.3"></a-grid>
-        
-        <!-- Luces ambientales -->
-        <a-light type="ambient" intensity="0.5" color="#445566"></a-light>
-        <a-light type="point" intensity="1.2" position="2 3 4" color="#ffaa88"></a-light>
-        
-        <!-- Objeto flotante 1: Logo de Mobile Legends (con texto) -->
-        <a-text value="🎮 MLBB 🎮" align="center" scale="1.2 1.2 0.5" position="-2 1.5 -3" color="#ffd966" font="mozillavr"></a-text>
-        
-        <!-- Objeto flotante 2: Logo de Fénix Basketball -->
-        <a-text value="🏀 FÉNIX BC 🏀" align="center" scale="1.2 1.2 0.5" position="3 1.2 -2" color="#ff8844" font="mozillavr"></a-text>
-        
-        <!-- Foto de ustedes (sprite plano) -->
-        <a-image src="https://picsum.photos/id/20/512/512" position="-1 1.8 -4" width="1.5" height="1.5" rotation="0 30 0"></a-image>
-        <!-- Mejor si cambias la URL por una imagen real de ustedes -->
-        
-        <!-- Frase flotante -->
-        <a-text value="✦ Nuestro universo paralelo ✦" align="center" scale="1 1 0.5" position="0 2.2 -5" color="#88ccff" font="mozillavr"></a-text>
-        
-        <!-- FRASE en otra esquina -->
-        <a-text value="∞ Código y Corazón ∞" align="center" scale="0.8 0.8 0.5" position="3 0.5 -5" color="#aaffaa" font="mozillavr"></a-text>
-        
-        <!-- CARTA DEL DÍA (escondida mirando hacia ARRIBA) -->
-        <!-- Está en el techo virtual, hay que mirar hacia arriba para verla -->
-        <a-text value="📜 CARTA DÍA 4 📜" align="center" scale="1.5 1.5 0.5" position="0 3.5 -2" color="#ffaa88" font="mozillavr"
-                animation="property: scale; to: 1.7 1.7 0.5; dur: 1200; dir: alternate; loop: true"></a-text>
-        <a-text value="'La ingeniería crea puentes, pero tú creaste mi mundo' ❤️" align="center" scale="0.9 0.9 0.5" position="0 2.8 -2" color="#ffdd99" font="mozillavr"></a-text>
-        
-        <!-- Efecto de partículas alrededor (estrellas) -->
-        <a-entity position="0 0 -5" geometry="primitive: sphere; radius: 0.05" material="color: #88aaff; shader: flat"
-                  repeat="150" position-randomizer="distribution: spherical; radius: 8"></a-entity>
-        
-        <!-- Sonido ambiental (opcional, requiere interacción del usuario) -->
-        <!-- <a-sound src="url(../assets/ambient.mp3)" autoplay="true" loop="true" volume="0.3"></a-sound> -->
-        
-        <!-- Cursor para móvil (mira y toca) -->
-        <a-camera>
-            <a-cursor color="#0ff" fuse="true" timeout="1500"></a-cursor>
-        </a-camera>
-    </a-scene>
+<div class="game-container">
+    <div class="stats">
+        <span>🎯 Aciertos: <span id="score">0</span></span>
+        <span>💥 Fallos: <span id="misses">0</span></span>
+    </div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <button id="resetGame">🔫 REINICIAR JUEGO</button>
+</div>
 
-    <script>
-        // Pequeño script para notificar consola
-        console.log("%c🌀 Día 4: Portal 360° activo | Busca la carta en el techo", "color: #88ffaa; font-size: 14px");
-        if (navigator.vibrate) navigator.vibrate(200);
-    </script>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreSpan = document.getElementById('score');
+    const missesSpan = document.getElementById('misses');
+    let score = 0;
+    let misses = 0;
+    let targets = [];
+    let gameRunning = true;
+    let animationId = null;
+
+    const TARGET_RADIUS = 28;
+    const MAX_TARGETS = 5;
+    const SPAWN_RATE = 40; // frames
+    let frameCounter = 0;
+
+    function randomPos() {
+        return {
+            x: Math.random() * (canvas.width - 2*TARGET_RADIUS) + TARGET_RADIUS,
+            y: Math.random() * (canvas.height - 2*TARGET_RADIUS) + TARGET_RADIUS,
+            life: 120 // frames antes de desaparecer
+        };
+    }
+
+    function addTarget() {
+        if (targets.length < MAX_TARGETS) {
+            targets.push(randomPos());
+        }
+    }
+
+    function updateTargets() {
+        for (let i = 0; i < targets.length; i++) {
+            targets[i].life--;
+            if (targets[i].life <= 0) {
+                targets.splice(i,1);
+                misses++;
+                missesSpan.innerText = misses;
+                i--;
+            }
+        }
+    }
+
+    function drawTargets() {
+        for (let t of targets) {
+            // dibujar diana
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, TARGET_RADIUS, 0, Math.PI*2);
+            ctx.fillStyle = '#ff3366';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, TARGET_RADIUS-8, 0, Math.PI*2);
+            ctx.fillStyle = '#ffcc88';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, TARGET_RADIUS-16, 0, Math.PI*2);
+            ctx.fillStyle = '#ff0000';
+            ctx.fill();
+            // ojos para darle gracia
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(t.x-10, t.y-8, 5, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(t.x+10, t.y-8, 5, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(t.x-10, t.y-8, 2, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(t.x+10, t.y-8, 2, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+
+    function drawBackground() {
+        ctx.fillStyle = '#1e2a2e';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle = '#2affb6';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(5,5,canvas.width-10,canvas.height-10);
+    }
+
+    function gameLoop() {
+        if (!gameRunning) return;
+        drawBackground();
+        updateTargets();
+        drawTargets();
+        frameCounter++;
+        if (frameCounter >= SPAWN_RATE) {
+            frameCounter = 0;
+            addTarget();
+        }
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function shoot(e) {
+        if (!gameRunning) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        let clientX, clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+            e.preventDefault();
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        const mouseX = (clientX - rect.left) * scaleX;
+        const mouseY = (clientY - rect.top) * scaleY;
+        let hit = false;
+        for (let i=0; i<targets.length; i++) {
+            const dx = mouseX - targets[i].x;
+            const dy = mouseY - targets[i].y;
+            const dist = Math.hypot(dx,dy);
+            if (dist < TARGET_RADIUS) {
+                targets.splice(i,1);
+                score++;
+                scoreSpan.innerText = score;
+                hit = true;
+                if (navigator.vibrate) navigator.vibrate(50);
+                if (score >= 10) {
+                    gameRunning = false;
+                    cancelAnimationFrame(animationId);
+                    ctx.font = "30px monospace";
+                    ctx.fillStyle = "#ffdd88";
+                    ctx.shadowBlur = 0;
+                    ctx.fillText("🎉 ¡VICTORIA! 🎉", canvas.width/2-120, canvas.height/2);
+                    ctx.font = "16px monospace";
+                    ctx.fillText("Ganaste un chocolate ❤️", canvas.width/2-100, canvas.height/2+50);
+                }
+                break;
+            }
+        }
+        if (!hit && !gameRunning) return;
+        // Efecto de disparo: circulito
+        ctx.beginPath();
+        ctx.arc(mouseX, mouseY, 8, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,255,200,0.8)';
+        ctx.fill();
+    }
+
+    function resetGame() {
+        if (animationId) cancelAnimationFrame(animationId);
+        score = 0;
+        misses = 0;
+        targets = [];
+        frameCounter = 0;
+        gameRunning = true;
+        scoreSpan.innerText = score;
+        missesSpan.innerText = misses;
+        gameLoop();
+    }
+
+    canvas.addEventListener('mousedown', shoot);
+    canvas.addEventListener('touchstart', shoot, { passive: false });
+    document.getElementById('resetGame').onclick = resetGame;
+    resetGame();
+</script>
 </body>
 </html>
