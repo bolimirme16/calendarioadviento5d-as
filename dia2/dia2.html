@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Día 2 · Rompecabezas</title>
+    <title>Día 2 · Rompecabezas con guía</title>
     <style>
+        * {
+            user-select: none;
+            box-sizing: border-box;
+        }
         body {
             background: #0a0f1e;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
             margin: 0;
             padding: 20px;
         }
@@ -21,86 +25,146 @@
             padding: 20px;
             border-radius: 32px;
             box-shadow: 0 0 20px rgba(0,255,255,0.2);
+            max-width: 550px;
+            width: 100%;
+        }
+        .guide {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0f1422;
+            border-radius: 20px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .guide-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background-size: cover;
+            border: 2px solid #2affb6;
+        }
+        .guide-text {
+            color: #bbffdd;
+            font-size: 12px;
+            text-align: left;
         }
         .puzzle-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
+            gap: 5px;
             background: #2a2e3a;
-            padding: 8px;
-            border-radius: 20px;
-            width: min(80vw, 80vh);
-            height: min(80vw, 80vh);
+            padding: 10px;
+            border-radius: 24px;
+            width: min(75vw, 75vh);
+            height: min(75vw, 75vh);
             margin: 0 auto;
         }
         .puzzle-tile {
             background-size: 300% 300%;
             background-color: #334;
-            border-radius: 12px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: 0.1s linear;
+            transition: 0.05s linear;
+            background-repeat: no-repeat;
         }
-        .puzzle-tile:active { transform: scale(0.97); }
+        .puzzle-tile:active {
+            transform: scale(0.96);
+        }
+        .empty-tile {
+            background: #1a2a3a !important;
+            background-image: none !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #88aaff;
+        }
         .message {
             margin-top: 20px;
             font-size: 1.2rem;
             color: #2affb6;
+            min-height: 70px;
+        }
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 15px;
         }
         button {
-            margin-top: 15px;
             background: #ff6644;
             border: none;
             color: white;
             padding: 8px 20px;
             border-radius: 40px;
             font-family: monospace;
+            font-weight: bold;
             cursor: pointer;
+            transition: 0.1s;
+        }
+        button:active {
+            transform: scale(0.96);
+        }
+        .solve-btn {
+            background: #33aa88;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2 style="color:#88ffcc;">🧩 DÍA 2 · ROMPECABEZAS MUEJEJE</h2>
+    <h2 style="color:#88ffcc;">🧩 DÍA 2 · ROMPECABEZAS</h2>
+    
+    <!-- GUÍA VISUAL -->
+    <div class="guide">
+        <div class="guide-img" id="guidePreview"></div>
+        <div class="guide-text">
+            📸 <strong>Imagen original</strong><br>
+            Arrastra / haz clic en las fichas<br>
+            para moverlas junto al hueco.
+        </div>
+    </div>
+
     <div class="puzzle-grid" id="puzzleGrid"></div>
     <div class="message" id="msg"></div>
-    <button id="shuffleBtn">🔀 MEZCLAR</button>
+    
+    <div class="buttons">
+        <button id="shuffleBtn">🔀 MEZCLAR</button>
+        <button id="solveBtn" class="solve-btn">🔓 RESOLVER</button>
+    </div>
 </div>
+
 <script>
     const GRID_SIZE = 3;
-    let tiles = []; // array de índices 0..8
-    let emptyIndex = 8;
+    let tiles = [];        // almacena el orden actual (0 = ficha 0, 1 = ficha 1...)
+    let emptyIndex = 8;    // índice de la ficha vacía (la última)
     const puzzleGrid = document.getElementById('puzzleGrid');
     const msgDiv = document.getElementById('msg');
+    
+    // IMAGEN REAL Y VISIBLE (cambia esta URL por la que quieras)
+    const IMG_URL = 'https://picsum.photos/id/104/600/600';  // precioso paisaje
 
-    // Usamos una imagen de ejemplo (puedes cambiarla)
-    const IMG_URL = 'imagen2D.png'; // paisaje bonito
+    // Precargar la imagen para la guía
+    const guidePreview = document.getElementById('guidePreview');
+    guidePreview.style.backgroundImage = `url(${IMG_URL})`;
+    guidePreview.style.backgroundSize = 'cover';
 
+    // Inicializar orden correcto [0,1,2,3,4,5,6,7,8]
     function initTiles() {
         tiles = [...Array(GRID_SIZE * GRID_SIZE).keys()];
         emptyIndex = tiles.length - 1;
     }
 
-    function shuffle() {
-        for (let i = 0; i < 200; i++) {
-            const neighbors = getNeighbors(emptyIndex);
-            if (neighbors.length) {
-                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-                swapTiles(emptyIndex, randomNeighbor);
-                emptyIndex = randomNeighbor;
-            }
-        }
-        renderGrid();
-        msgDiv.innerText = '';
-    }
-
+    // Obtener vecinos intercambiables (arriba, abajo, izquierda, derecha)
     function getNeighbors(idx) {
         const row = Math.floor(idx / GRID_SIZE);
         const col = idx % GRID_SIZE;
         const neighbors = [];
         if (row > 0) neighbors.push(idx - GRID_SIZE);
-        if (row < GRID_SIZE-1) neighbors.push(idx + GRID_SIZE);
+        if (row < GRID_SIZE - 1) neighbors.push(idx + GRID_SIZE);
         if (col > 0) neighbors.push(idx - 1);
-        if (col < GRID_SIZE-1) neighbors.push(idx + 1);
+        if (col < GRID_SIZE - 1) neighbors.push(idx + 1);
         return neighbors;
     }
 
@@ -115,39 +179,90 @@
         return true;
     }
 
-    function handleTileClick(idx) {
+    // Mover ficha si es adyacente al hueco
+    function tryMove(idx) {
         if (getNeighbors(emptyIndex).includes(idx)) {
             swapTiles(idx, emptyIndex);
             emptyIndex = idx;
             renderGrid();
             if (isSolved()) {
-                msgDiv.innerHTML = '🎉 ¡ROMpecabezas COMPLETADO! 🎉<br>🍫 Un chocolate virtual para ti. 🍫';
+                msgDiv.innerHTML = '🎉 ¡PUZZLE COMPLETADO! 🎉<br>🍫 Te has ganado un chocolate virtual. 🍫';
                 if (navigator.vibrate) navigator.vibrate(200);
+            } else {
+                msgDiv.innerHTML = '👍 Sigue moviendo...';
             }
+            return true;
         }
+        return false;
     }
 
+    // Mezclar el puzzle de forma legal (movimientos aleatorios)
+    function shuffle() {
+        for (let i = 0; i < 300; i++) {
+            const neighbors = getNeighbors(emptyIndex);
+            if (neighbors.length) {
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                swapTiles(emptyIndex, randomNeighbor);
+                emptyIndex = randomNeighbor;
+            }
+        }
+        renderGrid();
+        msgDiv.innerHTML = '🔀 Puzzle mezclado. ¡A ordenar!';
+    }
+
+    // RESOLVER: ordenar directamente y mostrar felicitación
+    function solvePuzzle() {
+        // Restaurar el orden correcto
+        initTiles();
+        emptyIndex = tiles.length - 1;
+        renderGrid();
+        msgDiv.innerHTML = '✨ ¡RESUELTO! ✨<br>✅ Disfruta de la imagen completa. 🎉';
+        if (navigator.vibrate) navigator.vibrate(100);
+    }
+
+    // Renderizar el grid con la imagen bien posicionada
     function renderGrid() {
         puzzleGrid.innerHTML = '';
         for (let i = 0; i < tiles.length; i++) {
             const tile = document.createElement('div');
             tile.className = 'puzzle-tile';
-            const bgPosX = (tiles[i] % GRID_SIZE) * 100;
-            const bgPosY = Math.floor(tiles[i] / GRID_SIZE) * 100;
-            tile.style.backgroundImage = `url(${IMG_URL})`;
-            tile.style.backgroundSize = `${GRID_SIZE * 100}%`;
-            tile.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
-            if (tiles[i] === GRID_SIZE*GRID_SIZE-1) {
-                tile.style.backgroundColor = '#1a2a3a';
+            
+            // Si es la ficha vacía (la número 8)
+            if (tiles[i] === GRID_SIZE * GRID_SIZE - 1) {
+                tile.classList.add('empty-tile');
+                tile.innerHTML = '✨';
                 tile.style.backgroundImage = 'none';
+            } else {
+                // Calcular posición de la imagen según el número de ficha (tiles[i])
+                const originalRow = Math.floor(tiles[i] / GRID_SIZE);
+                const originalCol = tiles[i] % GRID_SIZE;
+                const posX = (originalCol * 100) / (GRID_SIZE - 1);
+                const posY = (originalRow * 100) / (GRID_SIZE - 1);
+                tile.style.backgroundImage = `url(${IMG_URL})`;
+                tile.style.backgroundSize = `${GRID_SIZE * 100}%`;
+                tile.style.backgroundPosition = `${posX}% ${posY}%`;
+                tile.innerHTML = '';
             }
-            tile.addEventListener('click', () => handleTileClick(i));
+            
+            tile.addEventListener('click', (function(idx) {
+                return function() { tryMove(idx); };
+            })(i));
+            
             puzzleGrid.appendChild(tile);
         }
     }
 
+    // Inicializar todo
     initTiles();
-    shuffle();
+    shuffle();  // arranca mezclado
+
+    // Botones
+    document.getElementById('shuffleBtn').addEventListener('click', () => {
+        shuffle();
+    });
+    document.getElementById('solveBtn').addEventListener('click', () => {
+        solvePuzzle();
+    });
 </script>
 </body>
 </html>
