@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Día 2 · Rompecabezas</title>
+    <style>
+        body {
+            background: #0a0f1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: monospace;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: #1a1f2e;
+            padding: 20px;
+            border-radius: 32px;
+            box-shadow: 0 0 20px rgba(0,255,255,0.2);
+        }
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            background: #2a2e3a;
+            padding: 8px;
+            border-radius: 20px;
+            width: min(80vw, 80vh);
+            height: min(80vw, 80vh);
+            margin: 0 auto;
+        }
+        .puzzle-tile {
+            background-size: 300% 300%;
+            background-color: #334;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.1s linear;
+        }
+        .puzzle-tile:active { transform: scale(0.97); }
+        .message {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #2affb6;
+        }
+        button {
+            margin-top: 15px;
+            background: #ff6644;
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-family: monospace;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 style="color:#88ffcc;">🧩 ROMPECABEZAS · DÍA 2</h2>
+    <div class="puzzle-grid" id="puzzleGrid"></div>
+    <div class="message" id="msg"></div>
+    <button id="shuffleBtn">🔀 MEZCLAR</button>
+</div>
+<script>
+    const GRID_SIZE = 3;
+    let tiles = []; // array de índices 0..8
+    let emptyIndex = 8;
+    const puzzleGrid = document.getElementById('puzzleGrid');
+    const msgDiv = document.getElementById('msg');
+
+    // Usamos una imagen de ejemplo (puedes cambiarla)
+    const IMG_URL = 'https://picsum.photos/id/104/300/300'; // paisaje bonito
+
+    function initTiles() {
+        tiles = [...Array(GRID_SIZE * GRID_SIZE).keys()];
+        emptyIndex = tiles.length - 1;
+    }
+
+    function shuffle() {
+        for (let i = 0; i < 200; i++) {
+            const neighbors = getNeighbors(emptyIndex);
+            if (neighbors.length) {
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                swapTiles(emptyIndex, randomNeighbor);
+                emptyIndex = randomNeighbor;
+            }
+        }
+        renderGrid();
+        msgDiv.innerText = '';
+    }
+
+    function getNeighbors(idx) {
+        const row = Math.floor(idx / GRID_SIZE);
+        const col = idx % GRID_SIZE;
+        const neighbors = [];
+        if (row > 0) neighbors.push(idx - GRID_SIZE);
+        if (row < GRID_SIZE-1) neighbors.push(idx + GRID_SIZE);
+        if (col > 0) neighbors.push(idx - 1);
+        if (col < GRID_SIZE-1) neighbors.push(idx + 1);
+        return neighbors;
+    }
+
+    function swapTiles(i, j) {
+        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+
+    function isSolved() {
+        for (let i = 0; i < tiles.length; i++) {
+            if (tiles[i] !== i) return false;
+        }
+        return true;
+    }
+
+    function handleTileClick(idx) {
+        if (getNeighbors(emptyIndex).includes(idx)) {
+            swapTiles(idx, emptyIndex);
+            emptyIndex = idx;
+            renderGrid();
+            if (isSolved()) {
+                msgDiv.innerHTML = '🎉 ¡ROMpecabezas COMPLETADO! 🎉<br>🍫 Un chocolate virtual para ti. 🍫';
+                if (navigator.vibrate) navigator.vibrate(200);
+            }
+        }
+    }
+
+    function renderGrid() {
+        puzzleGrid.innerHTML = '';
+        for (let i = 0; i < tiles.length; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'puzzle-tile';
+            const bgPosX = (tiles[i] % GRID_SIZE) * 100;
+            const bgPosY = Math.floor(tiles[i] / GRID_SIZE) * 100;
+            tile.style.backgroundImage = `url(${IMG_URL})`;
+            tile.style.backgroundSize = `${GRID_SIZE * 100}%`;
+            tile.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+            if (tiles[i] === GRID_SIZE*GRID_SIZE-1) {
+                tile.style.backgroundColor = '#1a2a3a';
+                tile.style.backgroundImage = 'none';
+            }
+            tile.addEventListener('click', () => handleTileClick(i));
+            puzzleGrid.appendChild(tile);
+        }
+    }
+
+    initTiles();
+    shuffle();
+</script>
+</body>
+</html>
