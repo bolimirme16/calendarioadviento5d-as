@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Día 2 · Puzzle Deslizante (4x4)</title>
     <style>
         * {
@@ -19,14 +19,14 @@
             min-height: 100vh;
             font-family: 'Courier New', monospace;
             margin: 0;
-            padding: 20px;
+            padding: 16px;
         }
 
         .container {
             background: rgba(26, 31, 46, 0.9);
             backdrop-filter: blur(4px);
             border-radius: 48px;
-            padding: 20px;
+            padding: 20px 16px;
             max-width: 550px;
             width: 100%;
             text-align: center;
@@ -37,37 +37,38 @@
         h2 {
             color: #88ffcc;
             margin: 0 0 5px;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
         }
 
         .sub {
             color: #ccffdd;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             margin-bottom: 15px;
         }
 
-        /* Miniatura de la imagen (activable/desactivable) */
+        /* Miniatura */
         .preview-area {
             display: flex;
             justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
             margin-bottom: 15px;
         }
         .preview-btn {
             background: #335577;
             border: none;
             color: white;
-            padding: 6px 15px;
+            padding: 6px 12px;
             border-radius: 40px;
             font-family: monospace;
             cursor: pointer;
-            font-size: 0.9rem;
-            margin: 0 5px;
+            font-size: 0.8rem;
         }
         .thumbnail {
             display: none;
-            margin: 10px auto;
-            width: 120px;
-            height: 120px;
+            margin: 8px auto;
+            width: 100px;
+            height: 100px;
             border-radius: 20px;
             border: 2px solid #2affb6;
             background-size: cover;
@@ -78,30 +79,32 @@
             display: block;
         }
 
-        /* Tablero del puzzle */
+        /* TABLERO - RESPONSIVE, NO SE SALE */
         .puzzle-board {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 5px;
             background: #1a1f2a;
-            padding: 10px;
-            border-radius: 28px;
-            width: min(80vw, 80vh);
-            height: min(80vw, 80vh);
+            padding: 8px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
             margin: 0 auto;
+            aspect-ratio: 1 / 1;
         }
 
         .tile {
-            background-size: 400% 400%;
             background-color: #2a3a4a;
-            border-radius: 16px;
+            border-radius: 14px;
             cursor: pointer;
             transition: 0.05s linear;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.8rem;
             color: #88aaff;
+            background-size: 400% 400%;
+            background-repeat: no-repeat;
         }
 
         .tile:active {
@@ -115,9 +118,10 @@
 
         .message {
             margin: 15px 0;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #ffdd88;
-            min-height: 60px;
+            min-height: 65px;
+            padding: 0 8px;
         }
 
         .buttons {
@@ -137,7 +141,7 @@
             font-family: monospace;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: 0.1s;
         }
 
@@ -155,13 +159,13 @@
             margin-top: 15px;
         }
 
-        /* Modal para imagen grande */
+        /* Modal imagen completa */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -185,7 +189,7 @@
 <body>
 <div class="container">
     <h2>🧩 DÍA 2 · PUZZLE DESLIZANTE</h2>
-    <div class="sub">(4x4) Mueve las fichas hasta recomponer la imagen</div>
+    <div class="sub">(4x4) Mueve las fichas para recomponer la imagen</div>
 
     <div class="preview-area">
         <button id="togglePreviewBtn" class="preview-btn">🖼️ Mostrar miniatura</button>
@@ -203,63 +207,53 @@
     <footer>💡 Haz clic en una ficha junto al hueco (✨) para moverla.</footer>
 </div>
 
-<!-- Modal para imagen completa -->
+<!-- Modal imagen completa -->
 <div id="imageModal" class="modal">
     <span class="modal-close" id="closeModal">&times;</span>
     <img id="fullImage" src="" alt="Imagen completa">
 </div>
 
 <script>
-    // ================= CONFIGURACIÓN =================
-    const SIZE = 4;          // 4x4 = 16 fichas (la última es el hueco)
-    const EMPTY_VALUE = SIZE * SIZE - 1;  // índice 15 (0-index)
-    let tiles = [];          // orden actual: cada número representa la ficha (0..15)
+    // ========== CONFIGURACIÓN ==========
+    const SIZE = 4;               // 4x4
+    const EMPTY_VALUE = SIZE * SIZE - 1;  // 15
+    let tiles = [];
     let emptyIndex = EMPTY_VALUE;
-    const board = document.getElementById('puzzleBoard');
+    const boardEl = document.getElementById('puzzleBoard');
     const messageDiv = document.getElementById('message');
     
-    // Usa TU IMAGEN LOCAL (debe estar en misma carpeta)
+    // Tu imagen local
     const IMG_URL = 'imagen2D.png';
     
-    // Precargar la miniatura y modal
+    // Miniatura y modal
     const thumbnailDiv = document.getElementById('thumbnail');
     thumbnailDiv.style.backgroundImage = `url(${IMG_URL})`;
     thumbnailDiv.style.backgroundSize = 'cover';
-    const fullImage = document.getElementById('fullImage');
-    fullImage.src = IMG_URL;
+    document.getElementById('fullImage').src = IMG_URL;
     
     // Toggle miniatura
-    let thumbnailVisible = false;
-    const togglePreviewBtn = document.getElementById('togglePreviewBtn');
-    togglePreviewBtn.addEventListener('click', () => {
-        thumbnailVisible = !thumbnailVisible;
-        if (thumbnailVisible) {
-            thumbnailDiv.classList.add('visible');
-            togglePreviewBtn.innerText = '🖼️ Ocultar miniatura';
-        } else {
-            thumbnailDiv.classList.remove('visible');
-            togglePreviewBtn.innerText = '🖼️ Mostrar miniatura';
-        }
+    let thumbVisible = false;
+    const toggleBtn = document.getElementById('togglePreviewBtn');
+    toggleBtn.addEventListener('click', () => {
+        thumbVisible = !thumbVisible;
+        thumbnailDiv.classList.toggle('visible', thumbVisible);
+        toggleBtn.innerText = thumbVisible ? '🖼️ Ocultar miniatura' : '🖼️ Mostrar miniatura';
     });
     
-    // Modal imagen completa
+    // Modal imagen grande
     const modal = document.getElementById('imageModal');
-    const showFullImageBtn = document.getElementById('showFullImageBtn');
+    const showFullBtn = document.getElementById('showFullImageBtn');
     const closeModal = document.getElementById('closeModal');
-    showFullImageBtn.onclick = () => { modal.style.display = 'flex'; };
-    closeModal.onclick = () => { modal.style.display = 'none'; };
+    showFullBtn.onclick = () => modal.style.display = 'flex';
+    closeModal.onclick = () => modal.style.display = 'none';
     modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     
     // ========== LÓGICA DEL PUZZLE ==========
     function initSolvedState() {
-        tiles = [];
-        for (let i = 0; i < SIZE * SIZE; i++) {
-            tiles.push(i);
-        }
+        tiles = Array.from({ length: SIZE * SIZE }, (_, i) => i);
         emptyIndex = EMPTY_VALUE;
     }
     
-    // Obtener índices de vecinos (arriba, abajo, izquierda, derecha)
     function getNeighbors(idx) {
         const row = Math.floor(idx / SIZE);
         const col = idx % SIZE;
@@ -271,26 +265,8 @@
         return neighbors;
     }
     
-    // Intercambiar dos posiciones
     function swap(i, j) {
         [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-    }
-    
-    // Mover ficha si es adyacente al hueco
-    function tryMove(tileIndex) {
-        if (getNeighbors(emptyIndex).includes(tileIndex)) {
-            swap(tileIndex, emptyIndex);
-            emptyIndex = tileIndex;
-            renderBoard();
-            if (isSolved()) {
-                messageDiv.innerHTML = '🎉 ¡PUZZLE COMPLETADO! 🎉<br>🍫 ¡Ganaste un chocolate! 🍫';
-                if (navigator.vibrate) navigator.vibrate(200);
-            } else {
-                messageDiv.innerHTML = '👍 Sigue moviendo...';
-            }
-            return true;
-        }
-        return false;
     }
     
     function isSolved() {
@@ -300,7 +276,23 @@
         return true;
     }
     
-    // Mezclar mediante movimientos aleatorios (siempre resoluble)
+    function tryMove(tileIndex) {
+        if (getNeighbors(emptyIndex).includes(tileIndex)) {
+            swap(tileIndex, emptyIndex);
+            emptyIndex = tileIndex;
+            renderBoard();
+            if (isSolved()) {
+                // ✅ Resuelto manualmente: premio abrazo + chocolate
+                messageDiv.innerHTML = '🎉 ¡PUZZLE COMPLETADO! 🎉<br>Te ganaste un abrazo 🤗 y un chocolate 🍫';
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            } else {
+                messageDiv.innerHTML = '👍 Sigue moviendo las fichas...';
+            }
+            return true;
+        }
+        return false;
+    }
+    
     function shufflePuzzle() {
         for (let i = 0; i < 500; i++) {
             const neighbors = getNeighbors(emptyIndex);
@@ -314,29 +306,27 @@
         messageDiv.innerHTML = '🔀 Puzzle mezclado. ¡A ordenar!';
     }
     
-    // Resolver automáticamente (ordenar)
     function solvePuzzle() {
-        initSolvedState();
+        initSolvedState();   // ordena directamente
         renderBoard();
-        messageDiv.innerHTML = '✨ ¡RESUELTO! ✨<br>✅ Imagen completa restaurada.';
+        // ✅ Botón resolver: mensaje de "luego lo resolvemos" pero igual abrazo y chocolate
+        messageDiv.innerHTML = '✨ Usaste el botón resolver... luego lo resolvemos juntos. ✨<br>Pero igual te doy un abrazo 🤗 y un chocolate 🍫';
         if (navigator.vibrate) navigator.vibrate(100);
     }
     
-    // Renderizar el tablero con la imagen fragmentada
     function renderBoard() {
-        board.innerHTML = '';
+        boardEl.innerHTML = '';
         for (let i = 0; i < tiles.length; i++) {
             const tile = document.createElement('div');
             tile.className = 'tile';
-            const pieceValue = tiles[i];
-            if (pieceValue === EMPTY_VALUE) {
+            const piece = tiles[i];
+            if (piece === EMPTY_VALUE) {
                 tile.classList.add('empty');
                 tile.innerHTML = '✨';
                 tile.style.backgroundImage = 'none';
             } else {
-                // Calcular posición del fragmento en la imagen original
-                const row = Math.floor(pieceValue / SIZE);
-                const col = pieceValue % SIZE;
+                const row = Math.floor(piece / SIZE);
+                const col = piece % SIZE;
                 const posX = (col / (SIZE - 1)) * 100;
                 const posY = (row / (SIZE - 1)) * 100;
                 tile.style.backgroundImage = `url(${IMG_URL})`;
@@ -345,23 +335,19 @@
                 tile.innerHTML = '';
             }
             tile.addEventListener('click', (function(idx) {
-                return function() { tryMove(idx); };
+                return () => tryMove(idx);
             })(i));
-            board.appendChild(tile);
+            boardEl.appendChild(tile);
         }
     }
     
-    // Inicialización
+    // Inicio
     initSolvedState();
-    shufflePuzzle();   // arranca mezclado
+    shufflePuzzle();
     
     // Botones
-    document.getElementById('shuffleBtn').addEventListener('click', () => {
-        shufflePuzzle();
-    });
-    document.getElementById('solveBtn').addEventListener('click', () => {
-        solvePuzzle();
-    });
+    document.getElementById('shuffleBtn').addEventListener('click', shufflePuzzle);
+    document.getElementById('solveBtn').addEventListener('click', solvePuzzle);
 </script>
 </body>
 </html>
