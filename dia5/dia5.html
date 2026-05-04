@@ -2,153 +2,181 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Día 5 · Corazón 3D · El Gran Final</title>
-    <!-- Model Viewer -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Día 5 · Corazón Bonito</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
-            background: radial-gradient(circle at center, #0a0a2a 0%, #000 100%);
-            min-height: 100vh;
+            background: linear-gradient(145deg, #1a0a1a, #2a1020);
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
             font-family: 'Courier New', monospace;
-            padding: 20px;
+            margin: 0;
+            overflow: hidden;
         }
-        .container {
-            text-align: center;
-            max-width: 600px;
+        canvas {
+            display: block;
             width: 100%;
-        }
-        model-viewer {
-            width: 100%;
-            height: 60vh;
-            background: rgba(0,0,0,0.3);
-            border-radius: 32px;
-            box-shadow: 0 0 30px rgba(255, 80, 120, 0.3);
-            margin-bottom: 20px;
-        }
-        .title {
-            color: #ff88aa;
-            text-shadow: 0 0 8px #ff0066;
-            font-size: 1.8rem;
-            margin-bottom: 12px;
-            letter-spacing: 2px;
-        }
-        .sub {
-            color: #ccc;
-            font-size: 0.8rem;
-            margin-bottom: 20px;
-        }
-        button {
-            background: linear-gradient(45deg, #ff3366, #ff6680);
-            border: none;
-            color: white;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            font-size: 1.2rem;
-            padding: 14px 28px;
-            border-radius: 60px;
+            height: 100%;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
         }
-        button:active {
-            transform: scale(0.96);
-        }
-        .info {
-            margin-top: 20px;
-            font-size: 11px;
-            color: #aaa;
-        }
-        @media (max-width: 600px) {
-            model-viewer { height: 50vh; }
-            .title { font-size: 1.4rem; }
-            button { font-size: 1rem; padding: 12px 24px; }
+        .message {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #ff99cc;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            font-size: 1rem;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="title">❤️ CORAZÓN 3D ❤️</div>
-    <div class="sub">"Un pedazo de mi código y mi corazón para ti"</div>
-    
-    <model-viewer 
-        id="heart-model"
-        src="https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Heart.glb"
-        alt="Corazón 3D con latido"
-        ar 
-        ar-modes="webxr scene-viewer quick-look"
-        camera-controls 
-        auto-rotate 
-        rotation-per-second="10deg"
-        scale="1.2 1.2 1.2"
-        shadow-intensity="1"
-        exposure="1.2"
-        environment-image="neutral"
-        style="background-color: #110022;">
-        
-        <div class="progress-bar hide" slot="progress-bar">
-            <div class="update-bar"></div>
-        </div>
-        
-        <!-- Botón personalizado para AR -->
-        <button slot="ar-button" id="arButton" style="background-color: #ff3366; border-radius: 40px;">
-            📸 PONER EN MI MUNDO
-        </button>
-    </model-viewer>
-    
-    <button id="captureBtn">📷 CAPTURAR MOMENTO</button>
-    <div class="info">Toca "PONER EN MI MUNDO" para ver el corazón en tu entorno real (AR). Luego puedes capturar pantalla.</div>
-</div>
+<canvas id="heartCanvas"></canvas>
+<div class="message">❤️ TOCA EL CORAZÓN PARA UNA SORPRESA ❤️</div>
 
 <script>
-    const modelViewer = document.getElementById('heart-model');
-    const captureBtn = document.getElementById('captureBtn');
-    
-    // Efecto de latido: animar escala suavemente (simulación, si el modelo no tiene animación)
-    let beat = true;
-    setInterval(() => {
-        if (modelViewer && modelViewer.scale) {
-            const scale = beat ? '1.25 1.25 1.25' : '1.15 1.15 1.15';
-            modelViewer.scale = scale;
-            beat = !beat;
-        }
-    }, 600);
-    
-    // Función para capturar foto (sencilla: captura el canvas del model-viewer)
-    captureBtn.addEventListener('click', () => {
-        // Tomar un screenshot del model-viewer
-        const canvas = document.createElement('canvas');
-        const width = modelViewer.clientWidth;
-        const height = modelViewer.clientHeight;
+    const canvas = document.getElementById('heartCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let heartPoints = [];
+    let pulseScale = 1;
+    let pulseDirection = 0.02;
+    let particles = [];
+
+    function resizeCanvas() {
+        width = window.innerWidth;
+        height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        
-        // Capturar el contenido del model-viewer (esto es aproximado, funciona si se usa WebGL)
-        // model-viewer no expone directamente un método, pero se puede hacer con html2canvas? Mejor usamos la API de captura de medios?
-        // Simplifico: indicamos que puede hacer screenshot nativo (alert para que ella use botón físico)
-        alert("📸 Toca el botón de 'Captura de pantalla' de tu teléfono para guardar este momento. ✨ El corazón late por ti.");
-        
-        // Vibración
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    });
-    
-    // Añadir efecto de brillo al iniciar
-    setTimeout(() => {
-        modelViewer.style.boxShadow = "0 0 40px rgba(255, 80, 120, 0.8)";
-        if (navigator.vibrate) navigator.vibrate(200);
-    }, 500);
-    
-    console.log("%c❤️ Día 5: Corazón 3D activo | Realidad Aumentada lista", "color: #ff66aa; font-size: 16px");
+        generateHeartPoints();
+    }
+
+    // ecuación paramétrica del corazón
+    function generateHeartPoints() {
+        heartPoints = [];
+        for (let t = 0; t <= Math.PI * 2; t += 0.05) {
+            let x = 16 * Math.pow(Math.sin(t), 3);
+            let y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+            // escalar y centrar
+            let px = width/2 + x * 12 * pulseScale;
+            let py = height/2 - y * 12 * pulseScale;
+            heartPoints.push({x: px, y: py});
+        }
+    }
+
+    function drawHeart() {
+        if (heartPoints.length < 2) return;
+        ctx.clearRect(0, 0, width, height);
+        // gradiente
+        const grad = ctx.createLinearGradient(width/2, height/2-50, width/2, height/2+50);
+        grad.addColorStop(0, '#ff3366');
+        grad.addColorStop(1, '#ff88aa');
+        ctx.beginPath();
+        ctx.moveTo(heartPoints[0].x, heartPoints[0].y);
+        for (let i = 1; i < heartPoints.length; i++) {
+            ctx.lineTo(heartPoints[i].x, heartPoints[i].y);
+        }
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ff3377';
+        // brillo blanco interior
+        ctx.beginPath();
+        for (let i = 0; i < heartPoints.length; i+=2) {
+            ctx.moveTo(heartPoints[i].x, heartPoints[i].y);
+        }
+        ctx.fillStyle = 'rgba(255,200,210,0.4)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    function drawParticles() {
+        for (let i=0; i<particles.length; i++) {
+            const p = particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(255, ${100+Math.random()*100}, 150, ${p.life})`;
+            ctx.fill();
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            if (p.life <= 0) {
+                particles.splice(i,1);
+                i--;
+            }
+        }
+    }
+
+    function burstParticles(x, y) {
+        for (let i=0; i<60; i++) {
+            particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 6,
+                vy: (Math.random() - 0.5) * 6 - 2,
+                size: Math.random() * 8 + 2,
+                life: 0.8
+            });
+        }
+    }
+
+    function animateHeartbeat() {
+        pulseScale += pulseDirection;
+        if (pulseScale >= 1.1) pulseDirection = -0.01;
+        if (pulseScale <= 0.95) pulseDirection = 0.01;
+        generateHeartPoints();
+        drawHeart();
+        drawParticles();
+        requestAnimationFrame(animateHeartbeat);
+    }
+
+    function handleTap(e) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+            e.preventDefault();
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        // sencilla detección dentro del corazón: usamos distancia aproximada al centro
+        const centerX = width/2;
+        const centerY = height/2;
+        const dist = Math.hypot(x - centerX, y - centerY);
+        if (dist < 100) {
+            burstParticles(x, y);
+            // mostrar mensaje flotante
+            const msgDiv = document.createElement('div');
+            msgDiv.innerText = '💖 TE QUIERO 💖';
+            msgDiv.style.position = 'fixed';
+            msgDiv.style.left = `${clientX-50}px`;
+            msgDiv.style.top = `${clientY-50}px`;
+            msgDiv.style.color = '#ff99cc';
+            msgDiv.style.fontSize = '2rem';
+            msgDiv.style.fontWeight = 'bold';
+            msgDiv.style.textShadow = '0 0 10px red';
+            msgDiv.style.pointerEvents = 'none';
+            msgDiv.style.zIndex = 100;
+            document.body.appendChild(msgDiv);
+            setTimeout(() => msgDiv.remove(), 1500);
+            if (navigator.vibrate) navigator.vibrate(100);
+        }
+    }
+
+    window.addEventListener('resize', () => { resizeCanvas(); generateHeartPoints(); });
+    canvas.addEventListener('click', handleTap);
+    canvas.addEventListener('touchstart', handleTap, { passive: false });
+    resizeCanvas();
+    animateHeartbeat();
 </script>
 </body>
 </html>
