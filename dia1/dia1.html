@@ -78,7 +78,7 @@
 <body>
 <div class="container">
     <div class="info">
-        <span>🍫 RASCA · GANA UN CHOCOLATE</span>
+        <span>🍫 RASCA TODO Y GANA UNA SORPRESA </span>
         <span>RESIDUO: <span id="percent">100</span>%</span>
     </div>
     <canvas id="scratchCanvas" width="500" height="500"></canvas>
@@ -114,7 +114,7 @@
             offCtx.fillStyle = '#2c2e3a';
             offCtx.fillRect(0, 0, W, H);
             for (let i = 0; i < 1500; i++) {
-                offCtx.fillStyle = `rgba(100,110,130,${Math.random() * 0.5})`;
+                offCtx.fillStyle = `rgba(255,182,193,${Math.random() * 0.5})`;
                 offCtx.fillRect(Math.random() * W, Math.random() * H, 2, 2);
             }
             return offCanvas;
